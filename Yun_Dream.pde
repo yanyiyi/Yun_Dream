@@ -1,5 +1,6 @@
 import processing.serial.*;
 import processing.pdf.*;
+
 Serial port; 
 boolean record ;
 String nowStat ;
@@ -82,42 +83,27 @@ void draw() {
   */
 
   if ( 0 < port.available() ) {
-    nowStat = port.readStringUntil( lf ) ;
-    if ( nowStat != null ) {
-      print( "\n Receiving:" + nowStat ) ;        
-      iLight_Vals = int( splitTokens( nowStat, "," ) ) ;
-  
-      if ( iLight_Vals.length >= iLight_Counts ) {
-        for ( int i = 0 ; i < iLight_Counts ; i ++ )
-          if ( abs( iLight_Vals[i] - iPre_Light_Vals[i] ) <= 50 )
-            iLight_Vals[i] = iPre_Light_Vals[i] ;
-        
-        for ( int i = 0 ; i < iLight_Counts ; i ++ )
-          if ( iLight_Vals[i] >= iInit_Values[i] )
-            iLight_Vals[i] = iInit_Values[i] ;
-       
-        for ( int i = 0 ; i < iLight_Counts ; i ++ )
-          if ( iInit_Values[i] >= iLight_Vals[i] )
-            fCircle_Size[0][i] = map( iLight_Vals[i], 0, iInit_Values[i], width * fMagic[i] / border, 0 ) ;
-        
-        for ( int i = 0 ; i < iLight_Counts ; i ++ )
-          if ( iInit_Values[i] >= iLight_Vals[i] )
-            fCloud_Alpha[0][i] = map( iLight_Vals[i], iAlpha_Limit[1], iInit_Values[i], iAlpha_Limit[0], iAlpha_Limit[1] ) ;
- 
-        // Clean window.
-        background( 120, 210, 250 ) ; 
-        creatCloud(0);
-
-      } // if 
-        
-    } // if    
-    /*  
-    if (record) {
-      endRecord();
-      record = false;
-    } // if
-    */
-  } // if
+          nowStat = port.readStringUntil( lf ) ;
+          if ( nowStat != null ) {
+            print( "\n Receiving:" + nowStat ) ;        
+            iLight_Vals = int( splitTokens( nowStat, "," ) ) ;
+        int cNum = 0;
+                if ( iLight_Vals.length >= iLight_Counts ) {
+                      sensorLight(cNum);      
+                      // Clean window.
+                      background( 120, 210, 250 ) ; 
+                      creatCloud(cNum);
+          
+                } // if iLight_Vals.length >= iLight_Counts
+              
+          } // if  nowStat != null
+          /*  
+          if (record) {
+            endRecord();
+            record = false;
+      } // if record
+          */
+  } // if0 < port.available() 
     
 } // draw()
   // Use a keypress so thousands of files aren't created
@@ -128,64 +114,11 @@ void keyPressed() {
 } // keyPressed()
 
 
-float fCircleOffset(int fCircleNumber, int fCircleDevide) {
+float fCircleOffset(int cNum, int fCircleNumber, int fCircleDevide) {
   float cF;
-  cF = fCircle_Size[0][fCircleNumber] / fCircleDevide;
+  cF = fCircle_Size[cNum][fCircleNumber] / fCircleDevide;
   return cF;
 }
-
-
-        // creat Cloud
-        /**
-void creatCloudori() {
-        fHeightMove = 1;
-        fHeight += fHeightMove*fHeightDir;  
-        fWidthMove = 1;
-        fWidth += fWidthMove*fWidthDir;  
-        // Base 16 clouds.
-        for ( int i = 0 ; i < iLight_Counts ; i ++ ) {
-          // Cloud Colors.
-          rPoint[i] *= ( R[i] >= 255 || R[i] <= 150 ) ? -1 : 1 ;
-          gPoint[i] *= ( G[i] >= 255 || G[i] <= 150 ) ? -1 : 1 ;
-          bPoint[i] *= ( B[i] >= 255 || B[i] <= 150 ) ? -1 : 1 ;
-          R[i] += random( 0, 3 ) * rPoint[i] ;
-          G[i] += random( 0, 3 ) * gPoint[i] ;
-          B[i] += random( 0, 3 ) * bPoint[i] ;
-          
-          fill( B[i], fCloud_Alpha[i] ) ;
-          // Cloud draw size.
-          int x_temp = i % 4, y_temp = i / 4 ;
-          float x_real = 0, y_real= 0 ;
-          
-          x_real = ( fWidth ) + ( ( ( x_temp == 0 || x_temp == 1 ) ? -1 : 1 ) * fCircleOffset(i,2) ) + ( ( x_temp == 0 ) ? - fCircleOffset(i+1, 2) : 0 ) + ( ( x_temp == 3 ) ? fCircleOffset(i-1,2) : 0 ) ;
-          y_real = ( fHeight ) + ( ( ( y_temp == 0 || y_temp == 1 ) ? -1 : 1 ) * fCircleOffset(i,3) ) + ( ( y_temp == 0 ) ? -fCircleOffset(i+4, 3) : 0 ) + ( ( y_temp == 3 ) ? fCircleOffset(i-4,3) : 0 ) ;
-          
-       
-        
-          ellipse( x_real, y_real, fCircle_Size[i], fCircle_Size[i] ) ;
-        } // for
-        
-        
-        // Bonus clouds.
-        fill( 255, ( fCloud_Alpha[1] + fCloud_Alpha[2] ) * 2 / 3 ) ;
-        ellipse( ( fWidth ), ( fHeight ) - ( fCircleOffset(1,3) + fCircleOffset(2,3) + ( fCircleOffset(5,3) ) + fCircleOffset(6,3) ) / 2, ( fCircleOffset(1,3) + fCircleOffset(2,3) )* 2, ( fCircleOffset(1,3) + fCircleOffset(2,3) )* 2 ) ; 
-        fill( 255, ( fCloud_Alpha[5] + fCloud_Alpha[6] ) * 2 / 3 ) ;
-        ellipse( ( fWidth ), ( fHeight ) - ( fCircleOffset(5,3) + fCircleOffset(6,3) ) / 2, ( fCircleOffset(5,3) + fCircleOffset(6,3) ) * 2, ( fCircleOffset(5,3)+ fCircleOffset(6,3) ) * 2) ;
-        fill( 255, ( fCloud_Alpha[9] + fCloud_Alpha[10] ) * 2 / 3 ) ;
-        ellipse( ( fWidth ), ( fHeight ) + ( fCircleOffset(9,3) + fCircleOffset(10,3) ) / 2, ( fCircleOffset(9,3) + fCircleOffset(10,3) ) * 2, ( fCircleOffset(9,3) + fCircleOffset(10,3) ) * 2) ;
-        fill( 255, ( fCloud_Alpha[13] + fCloud_Alpha[14] ) * 2 / 3 ) ;
-        ellipse( ( fWidth ), ( fHeight ) + ( fCircleOffset(13,3) + fCircleOffset(14,3) + fCircleOffset(9,3) + fCircleOffset(10,3)) / 2, ( fCircleOffset(13,3) + fCircleOffset(14,3) ) * 2, ( fCircle_Size[13] + fCircle_Size[14] ) * 2 / 3 ) ; 
-        
-        fill( 255, ( fCloud_Alpha[4] + fCloud_Alpha[8] ) * 2 / 3 ) ;
-        ellipse( ( fWidth ) - ( ( fCircle_Size[4] / 3 ) + ( fCircle_Size[8] / 3 ) ) / 2, ( fHeight ), ( fCircle_Size[4] + fCircle_Size[8] ) * 2 / 3, ( fCircle_Size[4] + fCircle_Size[8] ) * 2 / 3 ) ;
-        fill( 255, ( fCloud_Alpha[7] + fCloud_Alpha[11] ) * 2 / 3 ) ;
-        ellipse( ( fWidth ) + ( ( fCircle_Size[7] / 3 ) + ( fCircle_Size[11] / 3 ) ) / 2, ( fHeight ), ( fCircle_Size[7] + fCircle_Size[11] ) * 2 / 3, ( fCircle_Size[7] + fCircle_Size[11] ) * 2 / 3 ) ;     
-        
-    } // function Cloud
-    
-    **/
-
-
        
 void creatCloud(int cNum) {
       
@@ -212,8 +145,8 @@ void creatCloud(int cNum) {
           int x_temp = i % 4, y_temp = i / 4 ;
           float x_real = 0, y_real= 0 ;
           
-          x_real = ( fWidth[cNum] ) + ( ( ( x_temp == 0 || x_temp == 1 ) ? -1 : 1 ) * fCircleOffset(i,2) ) + ( ( x_temp == 0 ) ? - fCircleOffset(i+1, 2) : 0 ) + ( ( x_temp == 3 ) ? fCircleOffset(i-1,2) : 0 ) ;
-          y_real = ( fHeight[cNum] ) + ( ( ( y_temp == 0 || y_temp == 1 ) ? -1 : 1 ) * fCircleOffset(i,3) ) + ( ( y_temp == 0 ) ? -fCircleOffset(i+4, 3) : 0 ) + ( ( y_temp == 3 ) ? fCircleOffset(i-4,3) : 0 ) ;
+          x_real = ( fWidth[cNum] ) + ( ( ( x_temp == 0 || x_temp == 1 ) ? -1 : 1 ) * fCircleOffset(cNum,i,2) ) + ( ( x_temp == 0 ) ? - fCircleOffset(cNum,i+1, 2) : 0 ) + ( ( x_temp == 3 ) ? fCircleOffset(cNum,i-1,2) : 0 ) ;
+          y_real = ( fHeight[cNum] ) + ( ( ( y_temp == 0 || y_temp == 1 ) ? -1 : 1 ) * fCircleOffset(cNum,i,3) ) + ( ( y_temp == 0 ) ? -fCircleOffset(cNum,i+4, 3) : 0 ) + ( ( y_temp == 3 ) ? fCircleOffset(cNum,i-4,3) : 0 ) ;
         
           ellipse( x_real, y_real, fCircle_Size[cNum][i], fCircle_Size[cNum][i] ) ;
           //println( "X:"+ x_real +",Y:"+ y_real +",Size:"+ fCircle_Size[cNum][i] +",Color:"+ B[cNum][i] +",Alpha:"+fCloud_Alpha[cNum][i]) ;
@@ -222,13 +155,13 @@ void creatCloud(int cNum) {
         
         // Bonus clouds.
         fill( 255, ( fCloud_Alpha[cNum][1] + fCloud_Alpha[cNum][2] ) * 2 / 3 ) ;
-        ellipse( ( fWidth[cNum] ), ( fHeight[cNum] ) - ( fCircleOffset(1,3) + fCircleOffset(2,3) + ( fCircleOffset(5,3) ) + fCircleOffset(6,3) ) / 2, ( fCircleOffset(1,3) + fCircleOffset(2,3) )* 2, ( fCircleOffset(1,3) + fCircleOffset(2,3) )* 2 ) ; 
+        ellipse( ( fWidth[cNum] ), ( fHeight[cNum] ) - ( fCircleOffset(cNum,1,3) + fCircleOffset(cNum,2,3) + ( fCircleOffset(cNum,5,3) ) + fCircleOffset(cNum,6,3) ) / 2, ( fCircleOffset(cNum,1,3) + fCircleOffset(cNum,2,3) )* 2, ( fCircleOffset(cNum,1,3) + fCircleOffset(cNum,2,3) )* 2 ) ; 
         fill( 255, ( fCloud_Alpha[cNum][5] + fCloud_Alpha[cNum][6] ) * 2 / 3 ) ;
-        ellipse( ( fWidth[cNum] ), ( fHeight[cNum] ) - ( fCircleOffset(5,3) + fCircleOffset(6,3) ) / 2, ( fCircleOffset(5,3) + fCircleOffset(6,3) ) * 2, ( fCircleOffset(5,3)+ fCircleOffset(6,3) ) * 2) ;
+        ellipse( ( fWidth[cNum] ), ( fHeight[cNum] ) - ( fCircleOffset(cNum,5,3) + fCircleOffset(cNum,6,3) ) / 2, ( fCircleOffset(cNum,5,3) + fCircleOffset(cNum,6,3) ) * 2, ( fCircleOffset(cNum,5,3)+ fCircleOffset(cNum,6,3) ) * 2) ;
         fill( 255, ( fCloud_Alpha[cNum][9] + fCloud_Alpha[cNum][10] ) * 2 / 3 ) ;
-        ellipse( ( fWidth[cNum] ), ( fHeight[cNum] ) + ( fCircleOffset(9,3) + fCircleOffset(10,3) ) / 2, ( fCircleOffset(9,3) + fCircleOffset(10,3) ) * 2, ( fCircleOffset(9,3) + fCircleOffset(10,3) ) * 2) ;
+        ellipse( ( fWidth[cNum] ), ( fHeight[cNum] ) + ( fCircleOffset(cNum,9,3) + fCircleOffset(cNum,10,3) ) / 2, ( fCircleOffset(cNum,9,3) + fCircleOffset(cNum,10,3) ) * 2, ( fCircleOffset(cNum,9,3) + fCircleOffset(cNum,10,3) ) * 2) ;
         fill( 255, ( fCloud_Alpha[cNum][13] + fCloud_Alpha[cNum][14] ) * 2 / 3 ) ;
-        ellipse( ( fWidth[cNum] ), ( fHeight[cNum] ) + ( fCircleOffset(13,3) + fCircleOffset(14,3) + fCircleOffset(9,3) + fCircleOffset(10,3)) / 2, ( fCircleOffset(13,3) + fCircleOffset(14,3) ) * 2, ( fCircle_Size[cNum][13] + fCircle_Size[cNum][14] ) * 2 / 3 ) ; 
+        ellipse( ( fWidth[cNum] ), ( fHeight[cNum] ) + ( fCircleOffset(cNum,13,3) + fCircleOffset(cNum,14,3) + fCircleOffset(cNum,9,3) + fCircleOffset(cNum,10,3)) / 2, ( fCircleOffset(cNum,13,3) + fCircleOffset(cNum,14,3) ) * 2, ( fCircle_Size[cNum][13] + fCircle_Size[cNum][14] ) * 2 / 3 ) ; 
         
         fill( 255, ( fCloud_Alpha[cNum][4] + fCloud_Alpha[cNum][8] ) * 2 / 3 ) ;
         ellipse( ( fWidth[cNum] ) - ( ( fCircle_Size[cNum][4] / 3 ) + ( fCircle_Size[cNum][8] / 3 ) ) / 2, ( fHeight[cNum] ), ( fCircle_Size[cNum][4] + fCircle_Size[cNum][8] ) * 2 / 3, ( fCircle_Size[cNum][4] + fCircle_Size[cNum][8] ) * 2 / 3 ) ;
@@ -236,6 +169,7 @@ void creatCloud(int cNum) {
         ellipse( ( fWidth[cNum] ) + ( ( fCircle_Size[cNum][7] / 3 ) + ( fCircle_Size[cNum][11] / 3 ) ) / 2, ( fHeight[cNum] ), ( fCircle_Size[cNum][7] + fCircle_Size[cNum][11] ) * 2 / 3, ( fCircle_Size[cNum][7] + fCircle_Size[cNum][11] ) * 2 / 3 ) ;     
         
     } // function Cloud
+
 
 void initailPosition(int cNum, int w, int h) {
         fHeightDir[cNum] = -1;
@@ -250,21 +184,23 @@ void initailPosition(int cNum, int w, int h) {
                 } // for
 } //initailPosition
 
-         /*
-          if ( x_temp == 0 )
-            x_real = ( width / 2 ) - fCircle_Size[i]/2 - fCircle_Size[i+1]/2 ;
-          else if ( x_temp == 1 )
-            x_real = ( width / 2 ) - fCircle_Size[i]/2 ;
-          else if ( x_temp == 2 )
-            x_real = ( width / 2 ) + fCircle_Size[i]/2 ;
-          else if ( x_temp == 3 )
-            x_real = ( width / 2 ) + fCircle_Size[i-1]/2 + fCircle_Size[i]/2 ;
-          if ( y_temp == 0 )
-            y_real = ( height / 2 ) - fCircle_Size[i]/3 - fCircle_Size[i+4]/3 ;
-          else if ( y_temp == 1 )
-            y_real = ( height / 2 ) - fCircle_Size[i]/3 ;
-          else if ( y_temp == 2 )
-            y_real = ( height / 2 ) + fCircle_Size[i]/3 ;
-          else if ( y_temp == 3 )
-            y_real = ( height / 2 ) + fCircle_Size[i]/3 + fCircle_Size[i-4]/3 ;
-          */
+void sensorLight(int cNum){
+for ( int i = 0 ; i < iLight_Counts ; i ++ )
+                        if ( abs( iLight_Vals[i] - iPre_Light_Vals[i] ) <= 50 )
+                          iLight_Vals[i] = iPre_Light_Vals[i] ;
+                      
+                      for ( int i = 0 ; i < iLight_Counts ; i ++ )
+                        if ( iLight_Vals[i] >= iInit_Values[i] )
+                          iLight_Vals[i] = iInit_Values[i] ;
+                     
+                      for ( int i = 0 ; i < iLight_Counts ; i ++ )
+                        if ( iInit_Values[i] >= iLight_Vals[i] )
+                          fCircle_Size[cNum][i] = map( iLight_Vals[i], 0, iInit_Values[i], width * fMagic[i] / border, 0 ) ;
+                      
+                      for ( int i = 0 ; i < iLight_Counts ; i ++ )
+                        if ( iInit_Values[i] >= iLight_Vals[i] )
+                          fCloud_Alpha[cNum][i] = map( iLight_Vals[i], iAlpha_Limit[1], iInit_Values[i], iAlpha_Limit[0], iAlpha_Limit[1] ) ;
+         
+}
+
+ 
