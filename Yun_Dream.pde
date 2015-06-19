@@ -102,8 +102,39 @@ void draw() {
             fCloud_Alpha[i] = map( iLight_Vals[i], iAlpha_Limit[1], iInit_Values[i], iAlpha_Limit[0], iAlpha_Limit[1] ) ;
  
         // Clean window.
-        background( 120, 210, 250 ) ;   
+        background( 120, 210, 250 ) ; 
+        creatCloud();
 
+      } // if 
+        
+    } // if    
+    /*  
+    if (record) {
+      endRecord();
+      record = false;
+    } // if
+    */
+  } // if
+    
+} // draw()
+  // Use a keypress so thousands of files aren't created
+  
+void keyPressed() {
+  noStroke();
+  record = true;
+} // keyPressed()
+
+
+float fCircleOffset(int fCircleNumber, int fCircleDevide) {
+  float cF;
+  cF = fCircle_Size[fCircleNumber] / fCircleDevide;
+  return cF;
+}
+
+
+        // creat Cloud
+        
+void creatCloud() {
         fHeightMove = 1;
         fHeight += fHeightMove*fHeightDir;  
         fWidthMove = 1;
@@ -165,29 +196,7 @@ void draw() {
         fill( 255, ( fCloud_Alpha[7] + fCloud_Alpha[11] ) * 2 / 3 ) ;
         ellipse( ( fWidth ) + ( ( fCircle_Size[7] / 3 ) + ( fCircle_Size[11] / 3 ) ) / 2, ( fHeight ), ( fCircle_Size[7] + fCircle_Size[11] ) * 2 / 3, ( fCircle_Size[7] + fCircle_Size[11] ) * 2 / 3 ) ;     
         
-      } // if
-        
-    } // if    
-    /*  
-    if (record) {
-      endRecord();
-      record = false;
-    } // if
-    */
-  } // if
-    
-} // draw()
-  // Use a keypress so thousands of files aren't created
-void keyPressed() {
-  noStroke();
-  record = true;
-} // keyPressed()
+    } // function Cloud
 
-
-float fCircleOffset(int fCircleNumber, int fCircleDevide) {
-  float cF;
-  cF = fCircle_Size[fCircleNumber] / fCircleDevide;
-  return cF;
-}
 
 
