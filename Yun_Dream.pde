@@ -5,33 +5,37 @@ Serial port;
 boolean record ;
 String nowStat ;
 int lf = 10 ;
-int iLight_Counts = 16 ;
+int iLight_Counts = 18 ;
 int[][] Aver_Stat = new int[10][iLight_Counts] ;
 int[] iLight_Vals = new int[iLight_Counts], iPre_Light_Vals = new int[iLight_Counts] ;
-int cAmount = 5; // amount of cloud
+int cAmount = 15; // amount of cloud
 int w,h;
-float[] fMagic = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 } ;
-float[][] fCircle_Size = new float[5][iLight_Counts] ; // , fPre_Circle_Size = new float[iLight_Counts] ;
-float[][] fCloud_Alpha = new float[5][iLight_Counts] ; // , fPre_Cloud_Alpha = new float[iLight_Counts] ;
+float[] fMagic = {   1, 1, 1, 1, 
+                     1, 1, 1, 1, 
+                     1, 1, 1, 0, 
+                     1, 1, 1, 1 ,
+                                   1,1} ;
+float[][] fCircle_Size = new float[cAmount][iLight_Counts] ; // , fPre_Circle_Size = new float[iLight_Counts] ;
+float[][] fCloud_Alpha = new float[cAmount][iLight_Counts] ; // , fPre_Cloud_Alpha = new float[iLight_Counts] ;
+int cANum;
+int[][] rPoint = new int[cAmount][iLight_Counts];
+int[][] gPoint = new int[cAmount][iLight_Counts];
+int[][] bPoint = new int[cAmount][iLight_Counts];
 
-int[][] rPoint = new int[5][iLight_Counts];
-int[][] gPoint = new int[5][iLight_Counts];
-int[][] bPoint = new int[5][iLight_Counts];
+int[] iAlpha_Limit = { 180, 0 } ;
 
-int[] iAlpha_Limit = { 200, 0 } ;
-
-float border = 5 ;
+float border = 7 ;
 float[] fWidth = new float[cAmount];
 float[] fHeight = new float[cAmount]; // Wdth Height of Clould center
 float[] fWidthMove = new float[cAmount];
 float[] fHeightMove = new float[cAmount]; // Width Height of Clould center
 int[] fWidthDir = new int[cAmount];
 int[] fHeightDir = new int[cAmount]; // Width Height of Clould center
-
-//boolean sketchFullScreen() {
-//  return true;
-//}
-
+int cw,ch;
+boolean sketchFullScreen() {
+  return true;
+}
+int flyingSig = 0;
 int[] iInit_Values = new int[iLight_Counts] ;
 
 float[][] R = new float[cAmount][iLight_Counts], G = new float[cAmount][iLight_Counts], B = new float[cAmount][iLight_Counts] ;
@@ -42,10 +46,12 @@ void setup(){ /// Processing Setup
         sketchFullScreen() ;
         background(120, 210, 250) ;
         port = new Serial( this, Serial.list()[7], 9600 ) ;
+        //size( 640, 480) ;
         size( displayWidth, displayHeight ) ;
         noStroke() ; // initail Eniroment
-      
-        initailPosition(0, width, height);  
+        cw= width;
+        ch= height;
+        initailPosition(0, cw, ch);  
         
         for ( int i = 0 ; i < iLight_Counts ; i ++ ) {
             iLight_Vals[i] = 0 ;
@@ -74,26 +80,42 @@ void setup(){ /// Processing Setup
 
 
 void draw() {
-  /*
+
   if (record) {
     // Note that #### will be replaced with the frame number. Fancy!
     beginRecord(PDF, "frame-####.pdf"); 
       noStroke();
   }
-  */
+
 
   if ( 0 < port.available() ) {
+          
           nowStat = port.readStringUntil( lf ) ;
           if ( nowStat != null ) {
             print( "\n Receiving:" + nowStat ) ;        
             iLight_Vals = int( splitTokens( nowStat, "," ) ) ;
-        int cNum = 0;
+
                 if ( iLight_Vals.length >= iLight_Counts ) {
-                      sensorLight(cNum);      
-                      // Clean window.
-                      background( 120, 210, 250 ) ; 
-                      creatCloud(cNum);
-          
+                        print(iLight_Vals[16]);
+                        if (iLight_Vals[16] > 1 && iLight_Vals[16] < 50){
+                            flyingSig++; 
+                            print("GO");
+                              if (flyingSig == 10){
+                                flyingSig = 0;
+                                cFly();
+                            }
+                        }
+                        background( 120, 210, 250 ) ;
+                        // Clean window.
+                        int cNum = cANum;
+                        sensorLight(cNum); 
+                        for(int i = 0; i <= cANum; i++ ){
+                          creatCloud(i);  
+                      }
+                      for(int i = 0; i <= cANum; i++ ){
+                        if (i != 0) moveCloud(i-1);  
+                      }
+                      
                 } // if iLight_Vals.length >= iLight_Counts
               
           } // if  nowStat != null
@@ -108,27 +130,44 @@ void draw() {
 } // draw()
   // Use a keypress so thousands of files aren't created
   
-void keyPressed() {
-  noStroke();
-  record = true;
-} // keyPressed()
 
+
+void keyPressed() {
+    if (key == CODED) {
+          if (keyCode == SHIFT) {
+              cANum++;
+              initailPosition(cANum,cw,ch);
+              if (cANum == cAmount-1) {cANum = 0;
+                initailPosition(cANum,cw,ch);
+              }
+
+          } else {
+          
+    }
+    record = true;
+  }// keyPressed()
+}
 
 float fCircleOffset(int cNum, int fCircleNumber, int fCircleDevide) {
   float cF;
-  cF = fCircle_Size[cNum][fCircleNumber] / fCircleDevide;
+  cF = (fCircle_Size[cNum][fCircleNumber]) / fCircleDevide;
   return cF;
 }
+ 
+void moveCloud(int cNum) {
+      
+        fHeightMove[cNum] = random(2,12);
+        fHeight[cNum] += fHeightMove[cNum] * fHeightDir[cNum];  
+        fWidthMove[cNum] = random(-5,5);
+        fWidth[cNum] += fWidthMove[cNum] * fWidthDir[cNum];  
+}     
+
        
 void creatCloud(int cNum) {
-      
-        fHeightMove[cNum] = 1;
-        fHeight[cNum] += fHeightMove[cNum] * fHeightDir[cNum];  
-        fWidthMove[cNum] = 1;
-        fWidth[cNum] += fWidthMove[cNum] * fWidthDir[cNum];  
         
         // Base 16 clouds.
         for ( int i = 0 ; i < iLight_Counts ; i ++ ) {
+          
           // Cloud Colors.
           rPoint[cNum][i] *= ( R[cNum][i] >= 255 || R[cNum][i] <= 150 ) ? -1 : 1 ;
           gPoint[cNum][i] *= ( G[cNum][i] >= 255 || G[cNum][i] <= 150 ) ? -1 : 1 ;
@@ -150,11 +189,11 @@ void creatCloud(int cNum) {
         
           ellipse( x_real, y_real, fCircle_Size[cNum][i], fCircle_Size[cNum][i] ) ;
           //println( "X:"+ x_real +",Y:"+ y_real +",Size:"+ fCircle_Size[cNum][i] +",Color:"+ B[cNum][i] +",Alpha:"+fCloud_Alpha[cNum][i]) ;
-        } // for
+          } // for
 
         
         // Bonus clouds.
-        fill( 255, ( fCloud_Alpha[cNum][1] + fCloud_Alpha[cNum][2] ) * 2 / 3 ) ;
+        fill( 255, ( fCloud_Alpha[cNum][1] + fCloud_Alpha[cNum][2] ) * 2 / 3  ) ;
         ellipse( ( fWidth[cNum] ), ( fHeight[cNum] ) - ( fCircleOffset(cNum,1,3) + fCircleOffset(cNum,2,3) + ( fCircleOffset(cNum,5,3) ) + fCircleOffset(cNum,6,3) ) / 2, ( fCircleOffset(cNum,1,3) + fCircleOffset(cNum,2,3) )* 2, ( fCircleOffset(cNum,1,3) + fCircleOffset(cNum,2,3) )* 2 ) ; 
         fill( 255, ( fCloud_Alpha[cNum][5] + fCloud_Alpha[cNum][6] ) * 2 / 3 ) ;
         ellipse( ( fWidth[cNum] ), ( fHeight[cNum] ) - ( fCircleOffset(cNum,5,3) + fCircleOffset(cNum,6,3) ) / 2, ( fCircleOffset(cNum,5,3) + fCircleOffset(cNum,6,3) ) * 2, ( fCircleOffset(cNum,5,3)+ fCircleOffset(cNum,6,3) ) * 2) ;
@@ -167,6 +206,17 @@ void creatCloud(int cNum) {
         ellipse( ( fWidth[cNum] ) - ( ( fCircle_Size[cNum][4] / 3 ) + ( fCircle_Size[cNum][8] / 3 ) ) / 2, ( fHeight[cNum] ), ( fCircle_Size[cNum][4] + fCircle_Size[cNum][8] ) * 2 / 3, ( fCircle_Size[cNum][4] + fCircle_Size[cNum][8] ) * 2 / 3 ) ;
         fill( 255, ( fCloud_Alpha[cNum][7] + fCloud_Alpha[cNum][11] ) * 2 / 3 ) ;
         ellipse( ( fWidth[cNum] ) + ( ( fCircle_Size[cNum][7] / 3 ) + ( fCircle_Size[cNum][11] / 3 ) ) / 2, ( fHeight[cNum] ), ( fCircle_Size[cNum][7] + fCircle_Size[cNum][11] ) * 2 / 3, ( fCircle_Size[cNum][7] + fCircle_Size[cNum][11] ) * 2 / 3 ) ;     
+
+        fill( 255, ( fCloud_Alpha[cNum][4] + fCloud_Alpha[cNum][8] ) * 2 / 3 ) ;
+        ellipse( ( fWidth[cNum] ) - ( ( fCircle_Size[cNum][4] / 3 ) + ( fCircle_Size[cNum][8] / 3 ) ) , ( fHeight[cNum] ), ( fCircle_Size[cNum][4] + fCircle_Size[cNum][8] ) * 2 / 3, ( fCircle_Size[cNum][4] + fCircle_Size[cNum][8] ) * 2 / 3 ) ;
+        fill( 255, ( fCloud_Alpha[cNum][7] + fCloud_Alpha[cNum][11] ) * 2 / 3 ) ;
+        ellipse( ( fWidth[cNum] ) + ( ( fCircle_Size[cNum][7] / 3 ) + ( fCircle_Size[cNum][11] / 3 ) ), ( fHeight[cNum] ), ( fCircle_Size[cNum][7] + fCircle_Size[cNum][11] ) * 2 / 3, ( fCircle_Size[cNum][7] + fCircle_Size[cNum][11] ) * 2 / 3 ) ;     
+
+   fill( 255, ( fCloud_Alpha[cNum][4] + fCloud_Alpha[cNum][8] ) * 2 / 4 ) ;
+        ellipse( ( fWidth[cNum] ) - ( ( fCircle_Size[cNum][4] / 3 ) + ( fCircle_Size[cNum][8] / 3 ) ) , ( fHeight[cNum] ), ( fCircle_Size[cNum][4] + fCircle_Size[cNum][8] ) * 2 / 3, ( fCircle_Size[cNum][4] + fCircle_Size[cNum][8] ) * 2 / 3 ) ;
+        fill( 255, ( fCloud_Alpha[cNum][7] + fCloud_Alpha[cNum][11] ) * 2 / 4 ) ;
+        ellipse( ( fWidth[cNum] ) + ( ( fCircle_Size[cNum][7] / 3 ) + ( fCircle_Size[cNum][11] / 3 ) ), ( fHeight[cNum] ), ( fCircle_Size[cNum][7] + fCircle_Size[cNum][11] ) * 2 / 3, ( fCircle_Size[cNum][7] + fCircle_Size[cNum][11] ) * 2 / 3 ) ;     
+
         
     } // function Cloud
 
@@ -175,17 +225,17 @@ void initailPosition(int cNum, int w, int h) {
         fHeightDir[cNum] = -1;
         fWidthDir[cNum] = -1;
         fWidth[cNum] = w/2;
-        fHeight[cNum] = h/2; /// Center of CLOUD
+        fHeight[cNum] = h/2 + h/4; /// Center of CLOUD
         print(fWidth[cNum],fHeight[cNum]);
         for ( int i = 0 ; i < iLight_Counts ; i ++ ) {
-                R[cNum][i] = random( 190, 255 ) ;
-                G[cNum][i] = random( 190, 255 ) ;
-                B[cNum][i] = random( 190, 255 ) ;
+                R[cNum][i] = random( 210, 255 ) ;
+                G[cNum][i] = random( 210, 255 ) ;
+                B[cNum][i] = random( 210, 255 ) ;
                 } // for
 } //initailPosition
 
 void sensorLight(int cNum){
-for ( int i = 0 ; i < iLight_Counts ; i ++ )
+        for ( int i = 0 ; i < iLight_Counts ; i ++ )
                         if ( abs( iLight_Vals[i] - iPre_Light_Vals[i] ) <= 50 )
                           iLight_Vals[i] = iPre_Light_Vals[i] ;
                       
@@ -199,8 +249,12 @@ for ( int i = 0 ; i < iLight_Counts ; i ++ )
                       
                       for ( int i = 0 ; i < iLight_Counts ; i ++ )
                         if ( iInit_Values[i] >= iLight_Vals[i] )
-                          fCloud_Alpha[cNum][i] = map( iLight_Vals[i], iAlpha_Limit[1], iInit_Values[i], iAlpha_Limit[0], iAlpha_Limit[1] ) ;
-         
+                          fCloud_Alpha[cNum][i] = map( iLight_Vals[i], iAlpha_Limit[1], iInit_Values[i], iAlpha_Limit[0], iAlpha_Limit[1] ) ;         
 }
-
- 
+void cFly(){
+              cANum++;
+              initailPosition(cANum,cw,ch);
+              if (cANum == cAmount-1) {cANum = 0;
+                initailPosition(cANum,cw,ch);
+              }             
+}
