@@ -14,7 +14,8 @@ float[] fMagic = {   1, 1, 1, 1,
                      1, 1, 1, 1, 
                      1, 1, 1, 0, 
                      1, 1, 1, 1 ,
-                                   1,1} ;
+                                   1,1} ; 
+                                   // 0-15 is the Cds, 16 is FarNear
 float[][] fCircle_Size = new float[cAmount][iLight_Counts] ; // , fPre_Circle_Size = new float[iLight_Counts] ;
 float[][] fCloud_Alpha = new float[cAmount][iLight_Counts] ; // , fPre_Cloud_Alpha = new float[iLight_Counts] ;
 int cANum;
@@ -25,17 +26,20 @@ int[][] bPoint = new int[cAmount][iLight_Counts];
 int[] iAlpha_Limit = { 180, 0 } ;
 
 float border = 7 ;
-float[] fWidth = new float[cAmount];
-float[] fHeight = new float[cAmount]; // Wdth Height of Clould center
+float[] fWidth = new float[cAmount]; // 
+float[] fHeight = new float[cAmount]; // Width and Height of the Clould center
 float[] fWidthMove = new float[cAmount];
 float[] fHeightMove = new float[cAmount]; // Width Height of Clould center
-int[] fWidthDir = new int[cAmount];
+int[] fWidthDir = new int[cAmount]; // direction
 int[] fHeightDir = new int[cAmount]; // Width Height of Clould center
 int cw,ch;
 boolean sketchFullScreen() {
   return true;
-}
-int flyingSig = 0;
+} //OPEN fullscreen
+
+int flyingSig = 0; 
+//
+
 int[] iInit_Values = new int[iLight_Counts] ;
 
 float[][] R = new float[cAmount][iLight_Counts], G = new float[cAmount][iLight_Counts], B = new float[cAmount][iLight_Counts] ;
@@ -45,7 +49,7 @@ void setup(){ /// Processing Setup
         beginRecord( PDF, "frame-####.pdf" );
         sketchFullScreen() ;
         background(120, 210, 250) ;
-        port = new Serial( this, Serial.list()[7], 9600 ) ;
+        port = new Serial( this, Serial.list()[5], 9600 ) ;
         //size( 640, 480) ;
         size( displayWidth, displayHeight ) ;
         noStroke() ; // initail Eniroment
@@ -58,7 +62,7 @@ void setup(){ /// Processing Setup
             iPre_Light_Vals[i] = 200 ;
         } // for()
   
-        // Delay 3 seconds and read 10 pair numbers.
+        // Initial: Delay 3 seconds and read 10 pair numbers.
         delay( 1000 ) ;
         nowStat = port.readStringUntil( lf ) ;
         delay( 1000 ) ;
@@ -88,7 +92,7 @@ void draw() {
   }
 
 
-  if ( 0 < port.available() ) {
+  if ( 0 < port.available() ) { // for arduino 
           
           nowStat = port.readStringUntil( lf ) ;
           if ( nowStat != null ) {
@@ -156,9 +160,9 @@ float fCircleOffset(int cNum, int fCircleNumber, int fCircleDevide) {
  
 void moveCloud(int cNum) {
       
-        fHeightMove[cNum] = random(2,12);
+        fHeightMove[cNum] = random(2,12); // this is amount the cloud raise
         fHeight[cNum] += fHeightMove[cNum] * fHeightDir[cNum];  
-        fWidthMove[cNum] = random(-5,5);
+        fWidthMove[cNum] = random(-5,5);  // this is amount the cloud shake
         fWidth[cNum] += fWidthMove[cNum] * fWidthDir[cNum];  
 }     
 
